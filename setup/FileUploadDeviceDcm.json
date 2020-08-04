@@ -1,18 +1,18 @@
 {
-    "@id": "urn:IoTCentral:IotCentralDevice:1",
+    "@id": "urn:IoTCentral:IotCentralFileUploadDevice:1",
     "@type": "CapabilityModel",
     "implements": [
         {
             "@type": "InterfaceInstance",
             "displayName": {
-                "en": "IoT Central Device Interface"
+                "en": "IoT Central File Upload Device Interface"
             },
-            "name": "IotCentralDeviceInterface",
+            "name": "IotCentralFileUploadDeviceInterface",
             "schema": {
-                "@id": "urn:IoTCentral:IotCentralDevice:IotCentralDeviceInterface:1",
+                "@id": "urn:IoTCentral:IotCentralFileUploadDevice:IotCentralFileUploadDeviceInterface:1",
                 "@type": "Interface",
                 "displayName": {
-                    "en": "IoT Central Device Interface"
+                    "en": "IoT Central File Upload Device Interface"
                 },
                 "contents": [
                     {
@@ -95,7 +95,7 @@
         }
     ],
     "displayName": {
-        "en": "IoT Central Device"
+        "en": "IoT Central File Upload Device"
     },
     "@context": [
         "http://azureiot.com/v1/contexts/IoTModel.json"

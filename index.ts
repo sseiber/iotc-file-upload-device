@@ -31,9 +31,11 @@ async function start() {
 
         const iotDevice = new IoTCentralDevice(log, scopeId, deviceId, deviceKey, modelId);
 
+        log('Starting device registration...');
         const connectionString = await iotDevice.provisionDeviceClient();
 
         if (connectionString) {
+            log('Connecting the device...');
             await iotDevice.connectDeviceClient(connectionString);
         }
         else {

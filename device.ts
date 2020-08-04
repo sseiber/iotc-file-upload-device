@@ -11,7 +11,7 @@ import {
 } from 'azure-iot-device';
 import {
     basename as pathBaseName,
-    extname as pathExtName
+    join as pathJoin
 } from 'path';
 import {
     stat as fsStat,
@@ -68,8 +68,6 @@ export class IoTCentralDevice {
                 provisioningSecurityClient
             );
 
-            this.log('Created provisioningClient succeeded');
-
             const provisioningPayload = {
                 iotcModelId: this.modelId
             };
@@ -82,7 +80,7 @@ export class IoTCentralDevice {
                         return reject(dpsError);
                     }
 
-                    this.log(`DPS registration succeeded - hub: ${dpsResult.assignedHub}`);
+                    this.log('DPS registration succeeded');
 
                     return resolve(`HostName=${dpsResult.assignedHub};DeviceId=${dpsResult.deviceId};SharedAccessKey=${this.deviceKey}`);
                 });
@@ -105,11 +103,9 @@ export class IoTCentralDevice {
 
             setInterval(async () => {
                 await this.getHealth();
-            }, 1000 * 15);
+            }, 1000 * 30);
 
             await this.deviceClient.open();
-
-            this.log(`Successfully connected to IoT Central - device: ${this.deviceId}`);
 
             this.deviceTwin = await this.deviceClient.getTwin();
             this.deviceTwin.on('properties.desired', this.onHandleDeviceProperties.bind(this));
@@ -148,6 +144,9 @@ export class IoTCentralDevice {
 
                 switch (setting) {
                     case SettingUploadFoldername:
+                        this.log(`Updating setting: ${setting} with value: ${value}`);
+
+                        // NOTE: validation should be in place for legal folder names
                         patchedProperties[setting] = this.deviceSettings[setting] = value || 'Temp01';
                         break;
 
@@ -157,7 +156,12 @@ export class IoTCentralDevice {
                 }
             }
 
-            await this.updateDeviceProperties(patchedProperties);
+            for (const key in patchedProperties) {
+                if (patchedProperties.hasOwnProperty(key)) {
+                    await this.updateDeviceProperties(patchedProperties);
+                    break;
+                }
+            }
         }
         catch (ex) {
             this.log(`Exception while handling desired properties: ${ex.message}`);
@@ -174,6 +178,8 @@ export class IoTCentralDevice {
         }
 
         try {
+            this.log(`Sending telemetry: ${JSON.stringify(data, null, 4)}`);
+
             const iotcMessage = new IoTMessage(JSON.stringify(data));
 
             await this.deviceClient.sendEvent(iotcMessage);
@@ -187,6 +193,8 @@ export class IoTCentralDevice {
         if (!properties || !this.deviceTwin) {
             return;
         }
+
+        this.log(`Updating twin properties: ${JSON.stringify(properties, null, 4)}`);
 
         try {
             await new Promise((resolve, reject) => {
@@ -225,25 +233,26 @@ export class IoTCentralDevice {
         return fileStats;
     }
 
-    private async uploadFile(filePath: string): Promise<boolean> {
-        let result = false;
+    private async uploadFile(filePath: string): Promise<string> {
+        let result = '';
 
         try {
             const blobFolder = (this.deviceSettings[SettingUploadFoldername] || 'Temp01');
             const fileStats = await this.getFileStats(filePath);
-            const fileBaseName = pathBaseName(filePath);
-            const fileExtension = pathExtName(filePath);
+            const blobFilePath = pathJoin(blobFolder, pathBaseName(filePath));
             const readableStream = fsCreateReadStream(filePath);
 
-            this.log(`uploadContent - data length: ${fileStats.size}, blob path: ${blobFolder}/${fileBaseName}.${fileExtension}`);
+            this.log(`uploadContent - data length: ${fileStats.size}, blob path: ${blobFilePath}`);
 
-            await this.deviceClient.uploadToBlob('foo/bar/test.json', readableStream, fileStats.size);
+            await this.deviceClient.uploadToBlob(blobFilePath, readableStream, fileStats.size);
 
             await this.sendMeasurement({
-                [EventUploadFile]: `${fileBaseName}.${fileExtension}`
+                [EventUploadFile]: `${blobFilePath}`
             });
 
-            result = true;
+            this.log('File upload succeeded');
+
+            result = blobFilePath;
         }
         catch (ex) {
             this.log(`Error during deviceClient.uploadToBlob: ${ex.message}`);
@@ -256,14 +265,14 @@ export class IoTCentralDevice {
     private async uploadFileCommand(commandRequest: DeviceMethodRequest, commandResponse: DeviceMethodResponse) {
         this.log('Received upload file command');
 
-        await this.uploadFile('./datafile.json');
+        const blobFilePath = await this.uploadFile('./datafile.json');
 
         await commandResponse.send(200);
         await this.updateDeviceProperties({
             [CommandUploadFile]: {
                 value: {
                     [CommandResponseStatusCode]: 202,
-                    [CommandResponseMessage]: `Received upload file command for deviceId: ${this.deviceId}`,
+                    [CommandResponseMessage]: `deviceId: ${this.deviceId} upload a file to the Azure storage container at: ${blobFilePath}`,
                     [CommandResponseData]: ''
                 }
             }

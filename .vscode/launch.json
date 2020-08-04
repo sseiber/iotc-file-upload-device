@@ -7,7 +7,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "IoT Central Device",
+            "name": "IoT Central File Upload Device",
             "console": "integratedTerminal",
             "program": "${workspaceFolder}/index.ts",
             "protocol": "inspector",

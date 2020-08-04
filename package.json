@@ -1,7 +1,7 @@
 {
-    "name": "iotc-device",
+    "name": "iotc-file-upload-device",
     "version": "1.0.0",
-    "description": "IoT Central Device Sample",
+    "description": "IoT Central File Upload Device Sample",
     "main": "index.js",
     "scripts": {
         "tslint": "node ./node_modules/tslint/bin/tslint -p ./tsconfig.json",
@@ -11,7 +11,7 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git@github.com:sseiber/iotc-device.git"
+        "url": "git@github.com:sseiber/iotc-file-upload-device.git"
     },
     "dependencies": {
         "azure-iot-device": "1.17.0",
