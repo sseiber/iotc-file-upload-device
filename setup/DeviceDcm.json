@@ -1,0 +1,103 @@
+{
+    "@id": "urn:IoTCentral:IotCentralDevice:1",
+    "@type": "CapabilityModel",
+    "implements": [
+        {
+            "@type": "InterfaceInstance",
+            "displayName": {
+                "en": "IoT Central Device Interface"
+            },
+            "name": "IotCentralDeviceInterface",
+            "schema": {
+                "@id": "urn:IoTCentral:IotCentralDevice:IotCentralDeviceInterface:1",
+                "@type": "Interface",
+                "displayName": {
+                    "en": "IoT Central Device Interface"
+                },
+                "contents": [
+                    {
+                        "@type": "Telemetry",
+                        "displayName": {
+                            "en": "System Heartbeat"
+                        },
+                        "name": "TELEMETRY_SYSTEM_HEARTBEAT",
+                        "schema": "integer"
+                    },
+                    {
+                        "@type": [
+                            "Telemetry",
+                            "SemanticType/Event"
+                        ],
+                        "displayName": {
+                            "en": "Upload Image"
+                        },
+                        "name": "EVENT_UPLOAD_FILE",
+                        "schema": "string"
+                    },
+                    {
+                        "@type": "Property",
+                        "displayName": {
+                            "en": "Upload Folder Name"
+                        },
+                        "name": "SETTING_UPLOAD_FOLDERNAME",
+                        "writable": true,
+                        "schema": "string"
+                    },
+                    {
+                        "@type": "Command",
+                        "commandType": "asynchronous",
+                        "response": {
+                            "@type": "SchemaField",
+                            "displayName": {
+                                "en": "Command Response"
+                            },
+                            "name": "CommandResponse",
+                            "schema": {
+                                "@type": "Object",
+                                "displayName": {
+                                    "en": "Object"
+                                },
+                                "fields": [
+                                    {
+                                        "@type": "SchemaField",
+                                        "displayName": {
+                                            "en": "Status Code"
+                                        },
+                                        "name": "COMMANDRESPONSE_STATUSCODE",
+                                        "schema": "long"
+                                    },
+                                    {
+                                        "@type": "SchemaField",
+                                        "displayName": {
+                                            "en": "Message"
+                                        },
+                                        "name": "COMMANDRESPONSE_MESSAGE",
+                                        "schema": "string"
+                                    },
+                                    {
+                                        "@type": "SchemaField",
+                                        "displayName": {
+                                            "en": "Data"
+                                        },
+                                        "name": "COMMANDRESPONSE_DATA",
+                                        "schema": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "displayName": {
+                            "en": "Upload File"
+                        },
+                        "name": "COMMAND_UPLOAD_FILE"
+                    }
+                ]
+            }
+        }
+    ],
+    "displayName": {
+        "en": "IoT Central Device"
+    },
+    "@context": [
+        "http://azureiot.com/v1/contexts/IoTModel.json"
+    ]
+}
