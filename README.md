@@ -1,4 +1,4 @@
-# IoT Central file ppload devcie sample
+# IoT Central file upload devcie sample
 This sample demonstrates how to use the file upload feature of IoT Hub from within an IoT Central app. For a full description of the IoT Central File Upload feature see the [documentation online](https://apps.azureiotcentral.com).
 
 ## Prerequisites
