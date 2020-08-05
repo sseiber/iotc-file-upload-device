@@ -10,13 +10,14 @@ import {
     DeviceMethodResponse
 } from 'azure-iot-device';
 import {
-    basename as pathBaseName,
-    join as pathJoin
+    extname as pathExtName,
+    basename as pathBaseName
 } from 'path';
 import {
     stat as fsStat,
     createReadStream as fsCreateReadStream
 } from 'fs';
+import * as moment from 'moment';
 import { log } from 'util';
 
 const dpsProvisioningHost: string = 'global.azure-devices-provisioning.net';
@@ -24,13 +25,13 @@ const dpsProvisioningHost: string = 'global.azure-devices-provisioning.net';
 const CommandUploadFile = 'COMMAND_UPLOAD_FILE';
 const TelemetrySystemHeartbeat = 'TELEMETRY_SYSTEM_HEARTBEAT';
 const EventUploadFile = 'EVENT_UPLOAD_FILE';
-const SettingUploadFoldername = 'SETTING_UPLOAD_FOLDERNAME';
+const SettingFilenameSuffix = 'SETTING_FILENAME_SUFFIX';
 const CommandResponseStatusCode = 'COMMANDRESPONSE_STATUSCODE';
 const CommandResponseMessage = 'COMMANDRESPONSE_MESSAGE';
 const CommandResponseData = 'COMMANDRESPONSE_DATA';
 
 interface IDeviceSettings {
-    [SettingUploadFoldername]: string;
+    [SettingFilenameSuffix]: string;
 }
 
 export class IoTCentralDevice {
@@ -52,7 +53,7 @@ export class IoTCentralDevice {
         this.modelId = modelId;
 
         this.deviceSettings = {
-            [SettingUploadFoldername]: 'Temp01'
+            [SettingFilenameSuffix]: moment.utc().format('YYYYMMDD-HHmmss')
         };
     }
 
@@ -143,11 +144,11 @@ export class IoTCentralDevice {
                 const value = desiredChangedSettings[setting];
 
                 switch (setting) {
-                    case SettingUploadFoldername:
+                    case SettingFilenameSuffix:
                         this.log(`Updating setting: ${setting} with value: ${value}`);
 
                         // NOTE: validation should be in place for legal folder names
-                        patchedProperties[setting] = this.deviceSettings[setting] = value || 'Temp01';
+                        patchedProperties[setting] = this.deviceSettings[setting] = value || moment.utc().format('YYYYMMDD-HHmmss');
                         break;
 
                     default:
@@ -237,22 +238,24 @@ export class IoTCentralDevice {
         let result = '';
 
         try {
-            const blobFolder = (this.deviceSettings[SettingUploadFoldername] || 'Temp01');
+            const blobNameSuffix = this.deviceSettings[SettingFilenameSuffix];
+            const fileExtName = pathExtName(filePath);
+            const fileBaseName = pathBaseName(filePath, fileExtName);
             const fileStats = await this.getFileStats(filePath);
-            const blobFilePath = pathJoin(blobFolder, pathBaseName(filePath));
+            const blobFilename = `${fileBaseName}-${blobNameSuffix}${fileExtName}`;
             const readableStream = fsCreateReadStream(filePath);
 
-            this.log(`uploadContent - data length: ${fileStats.size}, blob path: ${blobFilePath}`);
+            this.log(`uploadContent - data length: ${fileStats.size}, blob filename: ${blobFilename}`);
 
-            await this.deviceClient.uploadToBlob(blobFilePath, readableStream, fileStats.size);
+            await this.deviceClient.uploadToBlob(blobFilename, readableStream, fileStats.size);
 
             await this.sendMeasurement({
-                [EventUploadFile]: `${blobFilePath}`
+                [EventUploadFile]: `${blobFilename}`
             });
 
             this.log('File upload succeeded');
 
-            result = blobFilePath;
+            result = blobFilename;
         }
         catch (ex) {
             this.log(`Error during deviceClient.uploadToBlob: ${ex.message}`);
@@ -265,14 +268,14 @@ export class IoTCentralDevice {
     private async uploadFileCommand(commandRequest: DeviceMethodRequest, commandResponse: DeviceMethodResponse) {
         this.log('Received upload file command');
 
-        const blobFilePath = await this.uploadFile('./datafile.json');
+        const blobFilename = await this.uploadFile('./datafile.json');
 
         await commandResponse.send(200);
         await this.updateDeviceProperties({
             [CommandUploadFile]: {
                 value: {
                     [CommandResponseStatusCode]: 202,
-                    [CommandResponseMessage]: `deviceId: ${this.deviceId} upload a file to the Azure storage container at: ${blobFilePath}`,
+                    [CommandResponseMessage]: `deviceId: ${this.deviceId} upload a file to the Azure storage container at: ${blobFilename}`,
                     [CommandResponseData]: ''
                 }
             }

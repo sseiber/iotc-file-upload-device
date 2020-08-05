@@ -37,9 +37,9 @@
                     {
                         "@type": "Property",
                         "displayName": {
-                            "en": "Upload Folder Name"
+                            "en": "Filename Suffix"
                         },
-                        "name": "SETTING_UPLOAD_FOLDERNAME",
+                        "name": "SETTING_FILENAME_SUFFIX",
                         "writable": true,
                         "schema": "string"
                     },

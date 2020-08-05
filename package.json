@@ -21,6 +21,7 @@
         "azure-iot-security-symmetric-key": "^1.7.4",
         "lodash.get": "^4.4.2",
         "lodash.set": "^4.3.2",
+        "moment": "^2.27.0",
         "nconf": "^0.10.0"
     },
     "devDependencies": {
